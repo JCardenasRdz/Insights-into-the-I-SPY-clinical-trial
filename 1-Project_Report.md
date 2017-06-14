@@ -65,3 +65,6 @@ The analysis for this data set was divided in three phases: _1) Cleaning and org
   9. Largest tumor dimension 1-3 days after NAC estimated by MRI (`MRI_LD_1_3dAC`, continous variable)
   10. Largest tumor dimension between cycles of NAC estimated by MRI (`MRI_LD_Int_Reg`, continous variable)
   11. Largest tumor dimension before surgery estimated by MRI (`MRI_LD_PreSurg`, continous variable)
+
+  ## Data cleaning and organizing
+  The analysis for this data set was divided in three phases: _1) Cleaning and organizing,
