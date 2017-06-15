@@ -76,7 +76,7 @@ The code is organized in a Python package (`ispy1`), with modules for each of th
 11. Largest tumor dimension before surgery estimated by MRI (`MRI_LD_PreSurg`, continous variable)
 
 ## Data cleaning and organizing
-The data for this study was provided as an excel file (.xls) with multiple fields and is not suitable to construct the contingency tables required for inferential statistics. The module `clean_data` of the `ipsy1` was used to clean the data. The code for  `clean_data` module can be found [here](https://gist.github.com/JCardenasRdz/75dd152afe6250a5c7de2315b2a2a960).  
+The data for this study was provided as an excel file (.xls) with multiple fields and is not suitable to construct the contingency tables required for inferential statistics or to peform predictive statistics using `sklearn` and `statsmodels`. The module `clean_data` of the `ipsy1` was used to clean the data and generate a pandas dataframe. T he code for  `clean_data` module can be found [here](https://gist.github.com/JCardenasRdz/75dd152afe6250a5c7de2315b2a2a960).  
 
 ```Python
 # load module by Julio and pandas
@@ -89,7 +89,9 @@ df.head(2)
 
 # save clean data in new  csv file
 df.to_csv('./data/I-SPY_1_clean_data.csv')
+df.head(2)
 ```
+![df]('./images/1.png')
 
 
   The analysis for this data set was divided in three phases: _1) Cleaning and organizing,
