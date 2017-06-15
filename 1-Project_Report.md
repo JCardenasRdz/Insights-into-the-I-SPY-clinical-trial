@@ -1,15 +1,24 @@
 # Insights into the I-SPY clinical trial
 #### by Julio Cardenas-Rodriguez (@jdatascientist)
 
-## Description and Objectives
+## 1. Description and Objectives
 The goal of this project is to improve the prediction of clinical outcomes to neoadjuvant chemotherapy in patients with breast cancer. Currently, most patients with breast cancer undergo neoadjuvant chemotherapy, which is aimed at reducing the size of a tumor (burden) before surgery to remove the tumor or the entire breast.   
 Some of the patients response completely to the therapy and the patient does not present any residual tumor at the time of surgery (Pathologic complete response or `PCR`). On the other hand, most patients have residual disease at the time of surgery and further treatment or surgery is required.
 
-## Data Source
-All data for the **222 patients** treated for breast cancer in the IPSY-1 clinical trial was obtained from the [cancer imaging archive](https://wiki.cancerimagingarchive.net/display/Public/ISPY1) and the Breast Imaging Research Program at UCSF. To facilitate the dissemination and reproducibility of this analysis of this analysis, the raw data and all code were posted at [Data.World](https://data.world/julio/ispy-1-trial) and ``[Github]`` and are available under and MIT license.
+## 2. Data source
+All data for the **222 patients** treated for breast cancer in the IPSY-1 clinical trial was obtained from the [cancer imaging archive](https://wiki.cancerimagingarchive.net/display/Public/ISPY1) and the Breast Imaging Research Program at UCSF. To facilitate the dissemination and reproducibility of this analysis, the raw data and all code were posted at [Data.World](https://data.world/julio/ispy-1-trial) and [Github](https://github.com/JCardenasRdz/Insights-into-the-I-SPY-clinical-trial) and are available under an MIT license.
 
-### Description of the data and analysis
-The analysis for this data set was divided in three phases: _1) Cleaning and organizing, 2) Inferential Statistics, 3) Predictive Statistics, 4) Survival analysis_. The data contained in the cancer imaging archive is organized column-wise for all subjects as follows (rows = patients).
+## 3. Source code in Python and data analysis
+The code is organized in a Python package (`ispy1`), with modules for each of the four steps of the data analysis
+
+> - ispy1
+>   - clean_data.py
+>   - inferential_statistics.py
+>   - predictive_statistics.py
+>   - survival_analysis.py
+
+## 4. Description of the data
+> The data contained in the cancer imaging archive is organized column-wise for all subjects as follows (rows = patients).
 
 **Clinical Outcomes**
 1. Survival Status at the end of the study (`Survival`):
@@ -66,5 +75,21 @@ The analysis for this data set was divided in three phases: _1) Cleaning and org
   10. Largest tumor dimension between cycles of NAC estimated by MRI (`MRI_LD_Int_Reg`, continous variable)
   11. Largest tumor dimension before surgery estimated by MRI (`MRI_LD_PreSurg`, continous variable)
 
-  ## Data cleaning and organizing
+## Data cleaning and organizing
+The data for this study was provided as an excel file (.xls) with multiple fields and is not suitable to construct the contingency tables required for inferential statistics. The module `clean_data` of the `ipsy1` was used to clean the data. The code for  `clean_data` module can be found [here](https://gist.github.com/JCardenasRdz/75dd152afe6250a5c7de2315b2a2a960).  
+
+```Python
+# load module by Julio and pandas
+from ispy1 import clean_data
+import pandas as pd
+
+file = './data/I-SPY_1_All_Patient_Clinical_and_Outcome_Data.xlsx'
+df = clean_data.clean_my_data(file)
+df.head(2)
+
+# save clean data in new  csv file
+df.to_csv('./data/I-SPY_1_clean_data.csv')
+```
+
+
   The analysis for this data set was divided in three phases: _1) Cleaning and organizing,
