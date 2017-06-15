@@ -75,7 +75,7 @@ The code is organized in a Python package (`ispy1`), with modules for each of th
 10. Largest tumor dimension between cycles of NAC estimated by MRI (`MRI_LD_Int_Reg`, continous variable)
 11. Largest tumor dimension before surgery estimated by MRI (`MRI_LD_PreSurg`, continous variable)
 
-## Data cleaning and organizing
+## 5. Data cleaning and organizing
 The data for this study was provided as an excel file (.xls) with multiple fields and is not suitable to construct the contingency tables required for inferential statistics or to peform predictive statistics using `sklearn` and `statsmodels`. The module `clean_data` of the `ipsy1` was used to clean the data and generate a pandas dataframe. The code for  `clean_data` module can be found [here](https://gist.github.com/JCardenasRdz/75dd152afe6250a5c7de2315b2a2a960).  
 
 ```Python
@@ -93,7 +93,7 @@ df.head(2)
 ```
 ![df](./images/1.png)
 
-## Inferential Statistics
+## 6. Inferential Statistics
 The objective of inferential statistics is to estimate information about populations and test if two (or more) populations are statistically the same. The analysis for this project is organized according to the type of predictors ( categorical or continous) and their effect on categorical outcomes.
 - Load data
 
@@ -167,6 +167,7 @@ Residual  32.689923  166.0       NaN       NaN
 ---------------------------------------------
 ```
 Age clearly does not have an effect (is associated) with PCR. The effect so small that we can even conclude this just by looking at a grouped histogram:  
+
 ```Python
 >>> sns.boxplot(x= outcome, y=predictor[0], data=df, palette="Set3");
 >>> plt.show()
@@ -196,11 +197,12 @@ A simple boxplot shows that older patients are less likely to be `Alive` by the 
 <matplotlib.axes._subplots.AxesSubplot object at 0x111aff080>
 >>> plt.show()
 ```
+
 ![anova_age_alive](./images/3_anova_age_alive.png)
 
 - Explore interactions between age, survival, and PCR
 
-A very interesting fact about NAC and `PCR`, is that not all paitents who achieve `PCR` survival until the end of the study.
+A very interesting fact about NAC and `PCR`, is that not all patients who achieve `PCR` survive until the end of the study. As you can see below, 4 out of 41 patients who achieved `PCR` did not survive until the end of the study, while 95 / 123 who patients who did NOT achieve  `PCR` still lived until the end of the study.
 
 ```Python
 >>> inferential_statistics.contingency_table('PCR', 'Alive',df)
@@ -209,3 +211,117 @@ PCR
 Yes    41.0   4.0
 No     95.0  28.0
 ```
+Thus, there must be other factors (covariates) that can account for this difference. We can explore the effect of `Age` first by creating a histogram that splits the groups in four according to `PCR` = Yes / No and `Alive` = Yes / NO.
+```Python
+# create a boxplot to visualize this interaction
+>>> ax = sns.boxplot(x= 'PCR', y='age', hue ='Alive',data=df, palette="Set3");
+>>> ax.set_title('Interactions between age, survival, and PCR');
+>>> plt.show()
+```
+![int](./images/4_interactions_pcr_alive_age_v2.png)
+
+It is evident from the boxplots that `Age` has an effect on on survival and it is affected by the `PCR` status. For example, younger patients with `PCR` = Yes seem more likely to be alive by the end of the study. We can perform ANOVA only for patients for whom `PCR` = Yes. The table below shows that the p-value is < 0.01, which means that we are confident at the 99% level that age has an effect on survival for those patients with `PCR` =Yes.
+
+```Python
+
+# create dataframe only for patients with PCR = Yes
+>>> df_by_PCR = df.loc[df.PCR=='Yes',:]
+
+# Anova age vs Alive
+>>> predictor= ['age']
+>>> outcome = 'Alive'
+>>> anova_table, OLS = inferential_statistics.linear_models(df_by_PCR, outcome, predictor);
+---------------------------------------------
+            sum_sq    df         F    PR(>F)
+age       0.539468   1.0  7.470952  0.009065
+Residual  3.104976  43.0       NaN       NaN
+---------------------------------------------
+```
+
+The same analysis can be repeated for patients with `PCR` = No. Which results in a p-value of ~ 0.060, which is not statistically significant at the 5% confidence level but is fairly close. In other words, `age`, `PCR`, and `Alive` interact very strongly. The effect of these interactions will be quantified in the predictive statistics section using logistic regression.
+
+```Python
+
+# create dataframe only for patients with PCR = Yes
+>>> df_by_PCR = df.loc[df.PCR=='No',:]
+
+# Anova age vs Alive
+>>> predictor= ['age']
+>>> outcome = 'Alive'
+>>> anova_table, OLS = inferential_statistics.linear_models(df_by_PCR, outcome, predictor);
+---------------------------------------------
+             sum_sq     df         F    PR(>F)
+age        0.637369    1.0  3.674443  0.057611
+Residual  20.988648  121.0       NaN       NaN
+---------------------------------------------
+```
+
+-  Effect of MRI measurements on `PCR` : ANOVA
+As part of this study, the largest tumor dimension (`LD`) was measured for all patients at for different time points:
+1. `MRI_LD_Baseline`: Before the first NAC regime is started.
+2. `MRI_LD_1_3dAC`: 1-3 days after starting the first NAC regime.
+3. `MRI_LD_Int_Reg`: Between the end of the first regime and the start of the second regime.
+4. `MRI_LD_PreSurg`: Before surgery.
+
+The `inferential_statistics` module contains a function to perform ANOVA between each one of these MRI measurements and a particular outcome. The code and results for `PCR` are:
+
+```Python
+outcome = 'PCR'
+R = inferential_statistics.anova_MRI(outcome, df);
+```
+![5_anova_mri.png](./images/5_anova_mri_pcr.png)
+
+which indicate that all low MRI measurements with the exception of `MRI_LD_Baseline` are statistically associated with `PCR`. However, an statistically significant result is not always clinically relevant, for that we need to look at the [effect size](https://en.wikipedia.org/wiki/Effect_size) (ES). The ES is defined as the ratio of the ratio of the mean for each group divide by the standard deviation of the entire data. As it can be seen below, the effect size for MRI measurements are small:
+
+```Python
+>>> mri_features = ['MRI_LD_Baseline', 'MRI_LD_1_3dAC', 'MRI_LD_Int_Reg', 'MRI_LD_PreSurg']
+>>> outcome = 'Alive'
+# Effect Size
+>>> inferential_statistics.effect_size( df, mri_features, outcome)
+Effect Size
+Predictor of Alive             
+MRI_LD_Baseline        0.375046
+MRI_LD_1_3dAC          0.357002
+MRI_LD_Int_Reg         0.678682
+MRI_LD_PreSurg         0.469548
+```
+
+-  Effect of MRI measurements on `Alive`: ANOVA
+
+```Python
+outcome = 'PCR'
+R = inferential_statistics.anova_MRI(outcome, df);
+```
+
+![6_anova_mri_alive](./images/6_anova_mri_alive.png)
+
+These results indicate that all all MRI measurements are statistically associated with survival (`Alive`), but it is also good practice to calculate the effect size to estimate how big the differences are between patients who survived and those who did not.
+
+```Python
+>>> mri_features = ['MRI_LD_Baseline', 'MRI_LD_1_3dAC', 'MRI_LD_Int_Reg', 'MRI_LD_PreSurg']
+>>> outcome = 'Alive'
+
+# Effect Size
+>>> inferential_statistics.effect_size( df, mri_features, outcome)
+
+Effect Size
+Predictor of Alive             
+MRI_LD_Baseline        0.375046
+MRI_LD_1_3dAC          0.357002
+MRI_LD_Int_Reg         0.678682
+MRI_LD_PreSurg         0.469548
+```
+Finally, it is import to consider that only about 25% of all patients achieved `PCR` but even 56% did not achieve `PCR` they lived for the entire duration of the study (code below). Furthermore, these results do not indicate how long a patient will live on average (survival), not can be used to predict which patients will survive for the duration of the study (predictive). These two limitations will be addressed in the survival analysis and predictive statistics sections.
+
+```Python
+>>> f = lambda x:   100 * (  x /df.shape[0] )
+>>> df['dummy'] = 1;
+>>> df.groupby(['PCR','Alive']).count()['dummy'].apply(f)
+
+PCR  Alive
+No   No       16.666667
+     Yes      56.547619
+Yes  No        2.380952
+     Yes      24.404762
+```
+## 6. Predictive Statistics
