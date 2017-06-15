@@ -44,36 +44,36 @@ The code is organized in a Python package (`ispy1`), with modules for each of th
     - Blank = unavailable or no surgery
 
 **Predictors of clinical outcomes**
-  1. `Age` (Years)
-  2. `Race`, encoded as:
+1. `Age` (Years)
+2. `Race`, encoded as:
     - 1 = Caucasian
     - 3 = African American
     - 4 = Asian
     - 5 = Native Hawaiian
     - 6 = American Indian
     - 50 = Multiple race
-  3. Estrogen Receptor Status (`ER+`) encoded as:
+3. Estrogen Receptor Status (`ER+`) encoded as:
     - 1 = Positive
     - 0 = Negative
     - Blank = Indeterminate
-  4. Progesterone Receptor Status (`PR+`) encoded as:
+4. Progesterone Receptor Status (`PR+`) encoded as:
     - 1 = Positive
     - 0 = Negative
     - Blank = Indeterminate
-  5. Hormone Receptor Status (`ER+`)
+5. Hormone Receptor Status (`ER+`)
     - 1 = Positive
     - 0 = Negative
     - Blank = Indeterminate
-  6. Bilateral Breast Cancer (`Bilateral`):
+6. Bilateral Breast Cancer (`Bilateral`):
     - 1 = Cancer Detected on both breasts
     - 0 = Cancer Detected in a single breast
-  7. Breast with major or single Tumor (`Laterality`):
+7. Breast with major or single Tumor (`Laterality`):
     - 1 = Left breast
     - 2 = Right breast
-  8. Largest tumor dimension at Baseline estimated by MRI (`MRI_LD_Baseline`, continous variable)
-  9. Largest tumor dimension 1-3 days after NAC estimated by MRI (`MRI_LD_1_3dAC`, continous variable)
-  10. Largest tumor dimension between cycles of NAC estimated by MRI (`MRI_LD_Int_Reg`, continous variable)
-  11. Largest tumor dimension before surgery estimated by MRI (`MRI_LD_PreSurg`, continous variable)
+8. Largest tumor dimension at Baseline estimated by MRI (`MRI_LD_Baseline`, continous variable)
+9. Largest tumor dimension 1-3 days after NAC estimated by MRI (`MRI_LD_1_3dAC`, continous variable)
+10. Largest tumor dimension between cycles of NAC estimated by MRI (`MRI_LD_Int_Reg`, continous variable)
+11. Largest tumor dimension before surgery estimated by MRI (`MRI_LD_PreSurg`, continous variable)
 
 ## Data cleaning and organizing
 The data for this study was provided as an excel file (.xls) with multiple fields and is not suitable to construct the contingency tables required for inferential statistics. The module `clean_data` of the `ipsy1` was used to clean the data. The code for  `clean_data` module can be found [here](https://gist.github.com/JCardenasRdz/75dd152afe6250a5c7de2315b2a2a960).  
