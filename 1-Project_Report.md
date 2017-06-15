@@ -91,7 +91,8 @@ df.head(2)
 df.to_csv('./data/I-SPY_1_clean_data.csv')
 df.head(2)
 ```
-![df]('./images/1.png')
+![df](./images/1.png)
+
 
 
   The analysis for this data set was divided in three phases: _1) Cleaning and organizing,
