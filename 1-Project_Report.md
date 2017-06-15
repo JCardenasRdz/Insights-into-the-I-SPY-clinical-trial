@@ -101,6 +101,8 @@ The objective of inferential statistics is to estimate information about populat
 # standard modules
 import seaborn as sns
 import pandas as pd
+import matplotlib.pyplot as plt
+
 # module wrote by julio
 from ispy1 import inferential_statistics
 df = pd.read_csv('./data/I-SPY_1_clean_data.csv')
@@ -116,8 +118,9 @@ PCR
 Yes  17.0  28.0
 No   81.0  42.0
 ```
-Now, we can perform the a chi-2 test to the effect of multiple categorical predictors on `PCR`:
+Now, we can perform the chi-2 test to the effect of multiple categorical predictors on `PCR`:
 
+- Effect of categorical predictors on Pathological complete response (`PCR`)
 ```Python
 >>> predictors = ['White', 'ER+', 'PR+', 'HR+','Right_Breast']
 >>> outcome = 'PCR'
@@ -130,6 +133,39 @@ HR+           0.000307         0.3831  0.2286  0.6422
 Right_Breast  0.851883         1.0965  0.6649  1.8080
 ```
 
-1.1 Effect of categorical predictors on Pathological complete response (`PCR`)
+These results indicate that because `ER+`,`PR+`, and `HR+` show a p-value < 0.05 we reject the null hypothesis of indepedence and conclude that `PCR` is not independent from `ER+`,`PR+`, and `HR+`. Furthermore, the relative risk indicates that `ER+`,`PR+`, and `HR+` are associate with reduce probability of `PCR`, in other words, being positive for these markers reduce the chances of responding to the NAC.
 
-  The analysis for this data set was divided in three phases: _1) Cleaning and organizing,
+- Effect of categorical predictors on Pathological complete response (`Alive`)
+```Python
+>>> outcome = 'Alive'
+>>> inferential_statistics.categorical_data(outcome, predictors, df)
+               p-value  Relative_Risk   RR_lb   RR_ub
+White         0.439359         1.0935  0.9032  1.3239
+ER+           0.001135         1.3095  1.1025  1.5554
+PR+           0.162557         1.1266  0.9739  1.3031
+HR+           0.038917         1.1950  1.0094  1.4148
+Right_Breast  0.729139         0.9602  0.8287  1.1125
+```
+
+These results indicate that because `ER+`,and `HR+` have a mild effect on the chances of survival (p-value < 0.5), but they relative risk indicates that the effect is very close to 1.0, meaning that being `ER+` or `HER+` has little effect on survival according to the chi-2 test, a complete survival analysis is performed in section 3.0.   
+
+
+2. Inferential_statistics: Continous vs Categorical (ANOVA)  
+
+```Python
+>>> predictor= ['age']
+>>> outcome = 'PCR'
+>>> anova_table, OLS = inferential_statistics.linear_models(df, outcome, predictor);
+>>> plt.show()
+---------------------------------------------
+             sum_sq     df         F    PR(>F)
+age        0.256505    1.0  1.302539  0.255394
+Residual  32.689923  166.0       NaN       NaN
+---------------------------------------------
+```
+![anova_age_pcr](./images/2_anova_age_pcr.png)
+
+
+
+
+- Effect of Age on PCR
