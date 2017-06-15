@@ -76,7 +76,7 @@ The code is organized in a Python package (`ispy1`), with modules for each of th
 11. Largest tumor dimension before surgery estimated by MRI (`MRI_LD_PreSurg`, continous variable)
 
 ## Data cleaning and organizing
-The data for this study was provided as an excel file (.xls) with multiple fields and is not suitable to construct the contingency tables required for inferential statistics or to peform predictive statistics using `sklearn` and `statsmodels`. The module `clean_data` of the `ipsy1` was used to clean the data and generate a pandas dataframe. T he code for  `clean_data` module can be found [here](https://gist.github.com/JCardenasRdz/75dd152afe6250a5c7de2315b2a2a960).  
+The data for this study was provided as an excel file (.xls) with multiple fields and is not suitable to construct the contingency tables required for inferential statistics or to peform predictive statistics using `sklearn` and `statsmodels`. The module `clean_data` of the `ipsy1` was used to clean the data and generate a pandas dataframe. The code for  `clean_data` module can be found [here](https://gist.github.com/JCardenasRdz/75dd152afe6250a5c7de2315b2a2a960).  
 
 ```Python
 # load module by Julio and pandas
@@ -93,6 +93,43 @@ df.head(2)
 ```
 ![df](./images/1.png)
 
+## Inferential Statistics
+The objective of inferential statistics is to estimate information about populations and test if two (or more) populations are statistically the same. The analysis for this project is organized according to the type of predictors ( categorical or continous) and their effect on categorical outcomes.
+- Load data
 
+```Python
+# standard modules
+import seaborn as sns
+import pandas as pd
+# module wrote by julio
+from ispy1 import inferential_statistics
+df = pd.read_csv('./data/I-SPY_1_clean_data.csv')
+```
+1. Inferential_statistics: Categorical vs Categorical (Chi-2 test)   
+
+The first thing needed to perform this kind of analysis is to construct contingency tables to establish the frequency of observations for each category being studied for example:
+
+```Python
+>>> inferential_statistics.contingency_table('PCR', 'ER+',df)
+ER+   Yes    No
+PCR            
+Yes  17.0  28.0
+No   81.0  42.0
+```
+Now, we can perform the a chi-2 test to the effect of multiple categorical predictors on `PCR`:
+
+```Python
+>>> predictors = ['White', 'ER+', 'PR+', 'HR+','Right_Breast']
+>>> outcome = 'PCR'
+>>> inferential_statistics.categorical_data(outcome, predictors, df)
+               p-value  Relative_Risk   RR_lb   RR_ub
+White         0.833629         0.8878  0.5076  1.5528
+ER+           0.001988         0.4337  0.2582  0.7285
+PR+           0.000198         0.3219  0.1707  0.6069
+HR+           0.000307         0.3831  0.2286  0.6422
+Right_Breast  0.851883         1.0965  0.6649  1.8080
+```
+
+1.1 Effect of categorical predictors on Pathological complete response (`PCR`)
 
   The analysis for this data set was divided in three phases: _1) Cleaning and organizing,
