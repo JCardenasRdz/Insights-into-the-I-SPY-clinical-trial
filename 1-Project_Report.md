@@ -150,22 +150,62 @@ Right_Breast  0.729139         0.9602  0.8287  1.1125
 These results indicate that because `ER+`,and `HR+` have a mild effect on the chances of survival (p-value < 0.5), but they relative risk indicates that the effect is very close to 1.0, meaning that being `ER+` or `HER+` has little effect on survival according to the chi-2 test, a complete survival analysis is performed in section 3.0.   
 
 
-2. Inferential_statistics: Continous vs Categorical (ANOVA)  
+2. Inferential_statistics: Continous vs Categorical (ANOVA)   
+
+An analysis using continous predictors for a categorical outcome requires using analysis of variance (ANOVA). I implemented this technique in the `inferential_statistics` module of `isp1`.
+
+- Effect of Age on PCR
 
 ```Python
 >>> predictor= ['age']
 >>> outcome = 'PCR'
 >>> anova_table, OLS = inferential_statistics.linear_models(df, outcome, predictor);
->>> plt.show()
 ---------------------------------------------
              sum_sq     df         F    PR(>F)
 age        0.256505    1.0  1.302539  0.255394
 Residual  32.689923  166.0       NaN       NaN
 ---------------------------------------------
 ```
+Age clearly does not have an effect (is associated) with PCR. The effect so small that we can even conclude this just by looking at a grouped histogram:  
+```Python
+>>> sns.boxplot(x= outcome, y=predictor[0], data=df, palette="Set3");
+>>> plt.show()
+```
 ![anova_age_pcr](./images/2_anova_age_pcr.png)
 
 
+- Effect of `Age` on survival (`Alive`)
 
+The ANOVA for this interaction indicates that `Age` has an effect on survival (`Alive`). It technically would bot be significant at the 95% confidence level (p-value = 0.06), but it would at the 94% confidence level.
 
-- Effect of Age on PCR
+```Python
+>>> predictor= ['age']
+>>> outcome = 'Alive'
+>>> anova_table, OLS = inferential_statistics.linear_models(df, outcome, predictor);
+---------------------------------------------
+             sum_sq     df         F    PR(>F)
+age        0.062227    1.0  0.399719  0.528104
+Residual  25.842534  166.0       NaN       NaN
+---------------------------------------------
+```
+
+A simple boxplot shows that older patients are less likely to be `Alive` by the end of this study.
+
+```Python
+>>> sns.boxplot(x= outcome, y=predictor[0], data=df, palette="Set3");
+<matplotlib.axes._subplots.AxesSubplot object at 0x111aff080>
+>>> plt.show()
+```
+![anova_age_alive](./images/3_anova_age_alive.png)
+
+- Explore interactions between age, survival, and PCR
+
+A very interesting fact about NAC and `PCR`, is that not all paitents who achieve `PCR` survival until the end of the study.
+
+```Python
+>>> inferential_statistics.contingency_table('PCR', 'Alive',df)
+Alive   Yes    No
+PCR              
+Yes    41.0   4.0
+No     95.0  28.0
+```
