@@ -1,6 +1,8 @@
 # Insights into the I-SPY clinical trial
 #### by Julio Cardenas-Rodriguez (@jdatascientist)
 
+![design](./images/0-study_design.png)
+
 ## 1. Description and Objectives
 The goal of this project is to improve the prediction of clinical outcomes to neoadjuvant chemotherapy in patients with breast cancer. Currently, most patients with breast cancer undergo neoadjuvant chemotherapy, which is aimed at reducing the size of a tumor (burden) before surgery to remove the tumor or the entire breast.   
 Some of the patients response completely to the therapy and the patient does not present any residual tumor at the time of surgery (Pathologic complete response or `PCR`). On the other hand, most patients have residual disease at the time of surgery and further treatment or surgery is required.
