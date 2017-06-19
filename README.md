@@ -327,3 +327,8 @@ Yes  No        2.380952
      Yes      24.404762
 ```
 ## 6. Predictive Statistics
+The objective of predictive_statistics is not make inferences about a patient population but making predictions for individual patients. Which at the end is what we want if medicine is going to personalized. In terms of the machine learning nomenclature, predictive is statistics is a supervised learning method, because we know features and outcomes for a particular collection of observations. Mainly, the observed outcomes are: 1) categorical, where we need to predictive if a particular patient belong to one or more groups (Alive  vs Not Alive, Cure vs not Cured, etc.), 2) continous, where we want to predictive the value of a continous variable for a patient. The analysis presented here is divided in the same manner.
+
+
+
+be classified in categorical outcomes main
