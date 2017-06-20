@@ -42,7 +42,7 @@ def binary_classifier_metrics(classifier, Xtrain, Ytrain, Xtest, Ytest):
     return auc, kappa, fpr, tpr
 
 
-def split_data(Xdata,Ydata, oversample, K_neighbors):
+def split_data(Xdata,Ydata, oversample, K_neighbors = 4):
     if oversample == False:
         X_train, X_test, y_train, y_test = train_test_split(Xdata, Ydata,
                                                             train_size = 0.70,
@@ -143,3 +143,113 @@ def plot_compare_roc(fpr1_, tpr1_,fpr2_, tpr2_, auc1, auc2, title =''):
     plt.xlabel('False-positive rate');
     plt.ylabel('True-positive rate');
     plt.title(title);
+
+
+
+##  ============== Continous Outcomes  ============== ##
+
+# metrics
+mae = metrics.median_absolute_error
+
+def mae_report(Ytest, Yhat, outcome_):
+    error = mae(Ytest, Yhat)
+    error = np.round( error, decimals=3)
+    # report
+    print('==' *40)
+    print('The median absolute error for testing data set of ' + outcome_ + ' is: ' + str(error))
+    print('==' *40)
+
+import seaborn.apionly as sns
+
+def train_test_report(predictor, Xtrain, Ytrain, Xtest, Ytest, outcome):
+    # train
+    predictor.fit(Xtrain, Ytrain)
+    # test
+    Yhat = predictor.predict(Xtest)
+    # report
+    mae_report(Ytest, Yhat, outcome)
+
+    ax = sns.regplot(x = Ytrain, y= predictor.predict(Xtrain));
+    ax.set_ylabel('Predicted ' + outcome);
+    ax.set_xlabel('Observed ' + outcome);
+
+# lsq
+import statsmodels.api as sm
+def lsq(Xtrain,Ytrain, Xtest, Ytest, outcome =''):
+    # train
+    OLS = sm.OLS(Ytrain,Xtrain).fit();
+    print(OLS.summary())
+    #test
+    Yhat = OLS.predict(Xtest)
+    # report
+    mae_report(Ytest, Yhat, outcome)
+
+# SVR
+from sklearn.svm import SVR
+from sklearn.model_selection import GridSearchCV
+
+# GridSearchCV utility
+def gridsearch(regressor, grid):
+    optimized_regressor=  GridSearchCV(  regressor,
+                               param_grid = grid,
+                               cv= 3, verbose = 0, n_jobs = -1,
+                               scoring = metrics.make_scorer(metrics.median_absolute_error))
+
+    return optimized_regressor
+
+
+
+def svr(Xtrain,Ytrain, Xtest, Ytest, outcome = ''):
+    # define regressor
+    regressor =  SVR()
+    # define parameter grid search
+    grid = dict(       kernel = ['rbf','linear','sigmoid'],
+                       C = np.arange(1,11,1),
+                       epsilon = np.arange(1,11,1),
+                       gamma = np.linspace(1/10,10,3))
+    # perform grid search
+    grid_search=  gridsearch(regressor, grid)
+
+    # train, test, and report
+    train_test_report(grid_search, Xtrain, Ytrain, Xtest, Ytest, outcome)
+
+    return grid_search
+
+
+# ElasticNet
+from sklearn.linear_model import ElasticNet as ENet
+
+def ElasticNet(Xtrain,Ytrain, Xtest, Ytest, outcome = ''):
+    # define regressor
+    regressor =  ENet(max_iter=5000)
+    # define parameter grid search
+    grid = dict(   alpha = np.arange(1,20,.5), l1_ratio = np.arange(.1,1,.05))
+    # perform grid search
+    grid_search=  gridsearch(regressor, grid)
+    # train, test, and report
+    train_test_report(grid_search, Xtrain, Ytrain, Xtest, Ytest, outcome)
+
+    return grid_search
+
+# Random Forest Regressor
+from sklearn.ensemble import RandomForestRegressor as RFR
+
+def RandomForestRegressor(Xtrain,Ytrain, Xtest, Ytest, outcome = ''):
+    # define regressor
+    regressor =  RFR( criterion='mse', random_state = RANDOM_STATE)
+
+    #
+    num_features = Xtrain.shape[1]
+
+    # define parameter grid search
+    grid = dict(    n_estimators = np.arange(5,100,5),
+                    max_features = np.arange(1,num_features, 1),
+                    max_depth = [None, 1, 2, 3, 4, 5])
+
+    # perform grid search
+    grid_search=  gridsearch(regressor, grid)
+
+    # train, test, and report
+    train_test_report(grid_search, Xtrain, Ytrain, Xtest, Ytest, outcome)
+
+    return grid_search

@@ -749,5 +749,64 @@ The analysis of survival in the previous section was aimed at predicting if a pa
 ```
 
 **Recurrence-Free Survival (`RFS`, Continous in months)**   
+Recurrence-Free Survival (`RFS`) is the length of time after primary treatment for a cancer ends that the patient survives without any signs or symptoms of that cancer. The following regression methods will be used to construct a model to predict `RFS` after splitting the data in train and test:
 
-The analysis of survival in the prev
+1. Ordinary Linear Least square fitting
+2. ElasticNet
+3. SVM regression
+4. Random Forest regression
+
+as we did in the previous section, all predictors were fine tuned using `RandomizedSearchCV` for regressor 2 to 4, but oversampling is not needed for regression. The code an outputs are shown next
+
+```Python
+>>> y = df.RFS.values / 30; # conver to months
+>>> X_train, X_test, y_train, y_test = predictive_statistics.split_data(X, y, False)
+```
+
+- Ordinary Linear Least square fitting
+
+```Python
+>>> predictive_statistics.lsq(X_train, y_train, X_test, y_test, outcome =' Recurrence-Free Survival (months)')
+OLS Regression Results                            
+==============================================================================
+Dep. Variable:                      y   R-squared:                       0.870
+Model:                            OLS   Adj. R-squared:                  0.858
+Method:                 Least Squares   F-statistic:                     71.68
+Date:                Tue, 20 Jun 2017   Prob (F-statistic):           8.95e-43
+Time:                        08:39:03   Log-Likelihood:                -502.27
+No. Observations:                 117   AIC:                             1025.
+Df Residuals:                     107   BIC:                             1052.
+Df Model:                          10                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+
+================================================================================
+The median absolute error for testing data set of  Recurrence-Free Survival (months) is: 14.354
+================================================================================
+```
+
+- ElasticNet
+
+```Python
+>>> predictive_statistics.ElasticNet(X_train, y_train, X_test, y_test, outcome =' Recurrence-Free Survival (months)')
+================================================================================
+The median absolute error for testing data set of  RFS (months) is: 12.737
+================================================================================
+```
+
+- SVM Regression
+```Python
+>>> predictive_statistics.svr(X_train, y_train, X_test, y_test, outcome =' RFS(months)')
+
+================================================================================
+The median absolute error for testing data set of  RFS(months) is: 12.288
+================================================================================
+```
+
+- Random Forest Regressor
+```Python
+>> predictive_statistics.RandomForestRegressor(X_train, y_train, X_test, y_test, outcome =' RFS(months)')
+================================================================================
+The median absolute error for testing data set of  RFS(months) is: 14.88
+================================================================================
+```
