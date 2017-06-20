@@ -505,11 +505,90 @@ These results indicate that oversampling has a very small benefit for random for
 
 
 **Survival (`Alive`)**   
-Unbalanced sampl
+A similar approach can be used for survival, and we can see that `Alive` is even more unbalanced than `PCR`. With about 80% of the subjects surviving until the end of the study.
 
+```Python
+# allocate  outcome
+>>> outcome = 'Alive'
+>>> y = predictive_statistics.labels_to_numbers(df, outcome);
 
+# check how unbalanced the data are
+>>> df[outcome].value_counts(normalize = True).plot.barh();
+>>> plt.title('Normalized Sample size for Alive')
+>>> plt.xlabel('group size (%)')
+```
+![alive_sample](./images/Sample_Size_Alive.png)
 
+As before, we can run use logistic regression and random forest to predict survival [`Alive`].
 
+```Python
+# standard Logistic Regression
+>>> auc1, kappa1, fpr1, tpr1 = predictive_statistics.Logistic_Regression(X, y)
 
+precision    recall  f1-score   support
 
-Furthe
+         0       0.50      0.27      0.35        11
+         1       0.82      0.93      0.87        40
+
+avg / total       0.75      0.78      0.76        51
+
+The estimated Cohen kappa is 0.236734693878
+The estimated AUC is 0.599
+============================================================
+
+# unbalanced learning
+>>> auc2, kappa2, fpr2, tpr2 = predictive_statistics.Logistic_Regression(X, y, oversample=True, K_neighbors = 4)
+
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.36      0.45      0.40        11
+          1       0.84      0.78      0.81        40
+
+avg / total       0.73      0.71      0.72        51
+
+The estimated Cohen kappa is 0.208893485005
+The estimated AUC is 0.615
+============================================================
+
+>>> title ='Effect of oversampling on Logistic Regression for Alive'
+>>> predictive_statistics.plot_compare_roc(fpr1, tpr1,fpr2, tpr2, auc1, auc2, title = title)
+```
+![alive_log](./images/Alive_Logistic.png)
+
+while the code and results for a random forest classifier are:
+
+```Python
+>>> auc1, kappa1, fpr1, tpr1, _= predictive_statistics.RandomForest_Classifier(X, y)
+precision    recall  f1-score   support
+
+          0       0.38      0.27      0.32        11
+          1       0.81      0.88      0.84        40
+
+avg / total       0.72      0.75      0.73        51
+
+The estimated Cohen kappa is 0.16393442623
+The estimated AUC is 0.574
+============================================================
+
+>>> auc2, kappa2, fpr2, tpr2, _= predictive_statistics.RandomForest_Classifier(X, y, oversample=True, K_neighbors = 6)
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.67      0.36      0.47        11
+          1       0.84      0.95      0.89        40
+
+avg / total       0.81      0.82      0.80        51
+
+The estimated Cohen kappa is 0.375510204082
+The estimated AUC is 0.657
+============================================================
+
+>>> title ='Effect of oversampling on RFC for PCR'
+>>> predictive_statistics.plot_compare_roc(fpr1, tpr1,fpr2, tpr2, auc1, auc2, title = title)
+```
+![alive_log](./images/Alive_RFC.png)
+
+oversampling does not have an effect on the average results and causes an important increment in the precision, recall, and for the negative group, and improves AUC and kappa.   
+
+**Survival (`Alive`) including `PCR` as predictor**   
