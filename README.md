@@ -592,7 +592,8 @@ The estimated AUC is 0.657
 oversampling does not have an effect on the average results and causes an important increment in the precision, recall, and for the negative group, and improves AUC and kappa.   
 
 **Survival (`Alive`) including `PCR` as predictor**
-The most important clinical outcome in cancer is how long a patient lives after being treated, or if he/she is alive at the end of a study, with that in mind I included `PCR` as a predictor of survival.
+The most important clinical outcome in cancer is how long a patient lives after being treated, or if he/she is alive at the end of a study, with that in mind I included `PCR` as a predictor of survival. This makes sense given the study design.
+
 - Logistic Regression
 ```Python
 # allocate new predictor variable
@@ -655,5 +656,98 @@ avg / total       0.74      0.73      0.73        51
 The estimated Cohen kappa is 0.238805970149
 The estimated AUC is 0.627
 ============================================================
-
 ```
+
+As it can be seen above, including `PCR` only does not provide a significant improvement for Logistic nor RandomForest Classifier. Thus, if we to include information about surgery, it might be better to include the residual cancer burden `RCB`.
+
+**Survival (`Alive`) including `RCB` as a predictor**
+First, we need to create a new matrix of predictors with `RCB` append at the end:
+
+```Python
+>> rcb = pd.get_dummies(df['RCB']).values
+>>> newX = np.concatenate((X,rcb), axis  = 1)
+```
+next, we can perform logistic regression and random forest classification without oversampling.
+
+```Python
+>>> auc1, kappa1, fpr1, tpr1 = predictive_statistics.Logistic_Regression(newX, y)
+
+precision    recall  f1-score   support
+
+          0       0.50      0.36      0.42        11
+          1       0.84      0.90      0.87        40
+
+avg / total       0.76      0.78      0.77        51
+
+The estimated Cohen kappa is 0.292559899117
+The estimated AUC is 0.632
+============================================================
+
+>>> auc2, kappa2, fpr2, tpr2, _= predictive_statistics.RandomForest_Classifier(newX, y)
+precision    recall  f1-score   support
+
+          0       0.50      0.45      0.48        11
+          1       0.85      0.88      0.86        40
+
+avg / total       0.78      0.78      0.78        51
+
+The estimated Cohen kappa is 0.340775558167
+The estimated AUC is 0.665
+============================================================
+```
+The random forest classifier performs slightly better than logistic regression but not much, their ROC curves compare as follows:
+```Python
+# compare
+>>> title ='Predicting Survival including RCB as a predictor'
+>>> predictive_statistics.plot_compare_roc(fpr1, tpr1,fpr2, tpr2, auc1, auc2, title = title)
+>>> plt.legend(['Logistic Regression','Random Forest Classifier']);
+```
+![compare_rcb_log_vs_rfc](./images/LG_vs_RFC_Alive_RCB.png)
+
+What we can do next is to test the effect of oversampling using ADASYN:
+
+```Python
+>>> auc3, kappa3, fpr3, tpr3 = predictive_statistics.Logistic_Regression(newX, y, oversample=True, K_neighbors = 4)
+
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.33      0.45      0.38        11
+          1       0.83      0.75      0.79        40
+
+avg / total       0.73      0.69      0.70        51
+
+The estimated Cohen kappa is 0.180722891566
+The estimated AUC is 0.602
+============================================================
+
+>>> auc4, kappa4, fpr4, tpr4, _= predictive_statistics.RandomForest_Classifier(newX, y, oversample=True, K_neighbors = 4)
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.30      0.27      0.29        11
+          1       0.80      0.82      0.81        40
+
+avg / total       0.70      0.71      0.70        51
+
+The estimated Cohen kappa is 0.101057579318
+The estimated AUC is 0.549
+============================================================
+```
+
+As we observed for other cases, including oversampling using ADASYN does not improve things much or in this case, makes it a little worse, suggesting that this approach does not generalize properly.    
+
+### 6. 2 Prediction of continous outcomes
+The analysis of survival in the previous section was aimed at predicting if a patient will live to the end of the study, but that does not tell us how long they lived (which is what matters), nor how long the patient was relieved from cancer. These two questions are tackled in the following sections. But first, we need to organize the data to perform the analysis.
+
+```Python
+>>> cont_predictors = ['age','MRI_LD_Baseline', 'MRI_LD_1_3dAC', 'MRI_LD_Int_Reg', 'MRI_LD_PreSurg']
+>>> contX = df[cont_predictors].values
+>>> cat_pred = ['PCR','White', 'ER+', 'PR+', 'HR+'];
+>>> catX = pd.pandas.get_dummies(df[cat_pred], drop_first=True).values
+>>> X = np.concatenate( (catX, contX), axis=1)
+```
+
+**Recurrence-Free Survival (`RFS`, Continous in months)**   
+
+The analysis of survival in the prev
