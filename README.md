@@ -591,4 +591,69 @@ The estimated AUC is 0.657
 
 oversampling does not have an effect on the average results and causes an important increment in the precision, recall, and for the negative group, and improves AUC and kappa.   
 
-**Survival (`Alive`) including `PCR` as predictor**   
+**Survival (`Alive`) including `PCR` as predictor**
+The most important clinical outcome in cancer is how long a patient lives after being treated, or if he/she is alive at the end of a study, with that in mind I included `PCR` as a predictor of survival.
+- Logistic Regression
+```Python
+# allocate new predictor variable
+>>> pcr = predictive_statistics.labels_to_numbers(df, 'PCR').reshape(168,1)
+>>> newX = np.concatenate((X,pcr), axis  = 1)
+# standard LG
+>>> auc1, kappa1, fpr1, tpr1 = predictive_statistics.Logistic_Regression(newX, y)
+
+precision    recall  f1-score   support
+
+         0       0.43      0.27      0.33        11
+         1       0.82      0.90      0.86        40
+
+avg / total       0.73      0.76      0.74        51
+
+The estimated Cohen kappa is 0.198952879581
+The estimated AUC is 0.586
+============================================================
+
+>>> # unbalanced learning
+>>> auc2, kappa2, fpr2, tpr2 = predictive_statistics.Logistic_Regression(newX, y, oversample=True, K_neighbors = 10)
+
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.38      0.45      0.42        11
+          1       0.84      0.80      0.82        40
+
+avg / total       0.74      0.73      0.73        51
+
+The estimated Cohen kappa is 0.238805970149
+The estimated AUC is 0.627
+============================================================
+```
+- RandomForest_Classifier
+```Python
+>>>  auc1, kappa1, fpr1, tpr1 , _ = predictive_statistics.RandomForest_Classifier(newX, y)
+
+precision    recall  f1-score   support
+
+          0       0.33      0.09      0.14        11
+          1       0.79      0.95      0.86        40
+
+avg / total       0.69      0.76      0.71        51
+
+The estimated Cohen kappa is 0.0555555555556
+The estimated AUC is 0.52
+============================================================
+
+>>> auc2, kappa2, fpr2, tpr2, _ = predictive_statistics.RandomForest_Classifier(newX, y, oversample=True, K_neighbors = 10)
+
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.38      0.45      0.42        11
+          1       0.84      0.80      0.82        40
+
+avg / total       0.74      0.73      0.73        51
+
+The estimated Cohen kappa is 0.238805970149
+The estimated AUC is 0.627
+============================================================
+
+```
