@@ -204,9 +204,9 @@ def svr(Xtrain,Ytrain, Xtest, Ytest, outcome = ''):
     regressor =  SVR()
     # define parameter grid search
     grid = dict(       kernel = ['rbf','linear','sigmoid'],
-                       C = np.arange(1,11,1),
-                       epsilon = np.arange(1,11,1),
-                       gamma = np.linspace(1/10,10,3))
+                       C = np.arange(1,11,.1),
+                       epsilon = np.arange(1,11,.1),
+                       gamma = np.linspace(1/10,10,10))
     # perform grid search
     grid_search=  gridsearch(regressor, grid)
 

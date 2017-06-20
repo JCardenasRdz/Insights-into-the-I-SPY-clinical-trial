@@ -795,6 +795,7 @@ The median absolute error for testing data set of  RFS (months) is: 12.737
 ```
 
 - SVM Regression
+
 ```Python
 >>> predictive_statistics.svr(X_train, y_train, X_test, y_test, outcome =' RFS(months)')
 
@@ -803,10 +804,27 @@ The median absolute error for testing data set of  RFS(months) is: 12.288
 ================================================================================
 ```
 
+
+
 - Random Forest Regressor
+
 ```Python
 >> predictive_statistics.RandomForestRegressor(X_train, y_train, X_test, y_test, outcome =' RFS(months)')
 ================================================================================
 The median absolute error for testing data set of  RFS(months) is: 14.88
 ================================================================================
 ```
+
+
+**`Survival Length` (continous in months)**   
+The same approach used for `RFS` can be used to construct a model to predict how long the patient will leave after the complete
+cycle of therapy has been completed. The results are summarized in the table below.
+
+| Method            | Mean Absolute Error Survival |
+|-------------------|------------------------------|
+| Linear Regression | 15.82                        |
+| SVR               | 102.82                       |
+| ElasticNet        | 9.136                        |
+| RandomForest      | 9.254                        |
+
+As before, linear regression performs really well despite its simplicity, and its error is ~56% than more complex methods such as `ElasticNet` and `RandomForest`. `ElasticNet` is a linear model that combines the L1 and L2 penalties of the lasso and ridge methods.
