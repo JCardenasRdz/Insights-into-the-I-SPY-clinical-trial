@@ -327,8 +327,189 @@ Yes  No        2.380952
      Yes      24.404762
 ```
 ## 6. Predictive Statistics
-The objective of predictive_statistics is not make inferences about a patient population but making predictions for individual patients. Which at the end is what we want if medicine is going to personalized. In terms of the machine learning nomenclature, predictive is statistics is a supervised learning method, because we know features and outcomes for a particular collection of observations. Mainly, the observed outcomes are: 1) categorical, where we need to predictive if a particular patient belong to one or more groups (Alive  vs Not Alive, Cure vs not Cured, etc.), 2) continous, where we want to predictive the value of a continous variable for a patient. The analysis presented here is divided in the same manner.
+The objective of predictive_statistics is not make inferences about a patient population but making predictions for individual patients. Which at the end is what we want if medicine is going to personalized. In terms of the machine learning nomenclature, predictive is statistics is a supervised learning method, because we know features and outcomes for a particular collection of observations. Mainly, the observed outcomes are: 1) categorical, where we need to predictive if a particular patient belong to one or more groups (Alive  vs Not Alive, Cure vs not Cured, etc.), 2) continous, where we want to predictive the value of a continous variable for a patient. The analysis presented here is divided in the same manner. A toolbox to perform this analysis can be found at the Github [repository](https://github.com/JCardenasRdz/Insights-into-the-I-SPY-clinical-trial/blob/master/ispy1/predictive_statistics.py).
+
+### 6. 1 Prediction of categorical outcomes
+**Pathological Complete Response (`PCR`)**   
+Unbalanced samples are one of the main challenges in supervised classification learning. An unbalance sample when the number of observations in class of `N` possible outcomes makes the majority of the observations. Unfortunately, this imbalance is very common in health care, thus we need to confirm how unbalanced our sample for `PCR` is:
+
+```Python
+# modules
+import pandas as pd
+import matplotlib.pyplot as plt
+# data
+df = pd.read_csv('./data/I-SPY_1_clean_data.csv')
+# plot
+# check how unbalanced the data are
+outcome = 'PCR'
+df[outcome].value_counts(normalize = True).plot.barh();
+plt.title('Normalized Sample size for PCR')
+plt.xlabel('group size (%)');
+plt.show();
+```
+![PCR balance](./images/Sample_Size_PCR.png)
+
+We can see that 70% of the patients did not achieve `PCR`, is almost 2X more unbalanced than we want (50% split is ideal). A way to deal with this imbalance is to oversample the class with the fewest observations. This oversampling can be performed using the [imbalanced-learn python library](http://contrib.scikit-learn.org/imbalanced-learn/install.html), but first we need to allocate predictors and outcomes to match the format needed by _scikit-learn_:
+```Python
+# package by Julio
+from ispy1 import predictive_statistics
+
+# allocate continous predictors
+cont_predictors = ['age','MRI_LD_Baseline', 'MRI_LD_1_3dAC', 'MRI_LD_Int_Reg', 'MRI_LD_PreSurg']
+X_cont = df[cont_predictors].values
+
+# allocate clinical predictors
+cat_predictors = ['White', 'ER+', 'PR+', 'HR+'];
+X_cat = pd.pandas.get_dummies(df[cat_predictors], drop_first=True).values
+
+# allocate a single predictors matrix X
+X = np.concatenate( (X_cont, X_cat), axis=1)
+
+# allocate  outcome
+outcome = 'PCR'
+y = predictive_statistics.labels_to_numbers(df, outcome);    
+```
+Now, we can perform `Logistic Regression` on the combined categorical and continous predictors. I used the `GridSearchCV` module to find the logistic regression parameters that maximize `Cohen's Kappa` (which is a good metric for unbalanced samples).
+
+**why kappa is a good metric for classifiers**   
+A possible scenario is to have a classifier that predicts that 44 / 45 `PCR` belong to the class with the largest number of cases (`PCR` = No). As you can see in the following code, `AUC` and `accuracy` are very misleading metrics to measure the performance of a classifier, because
+
+```Python
+from sklearn import metrics
+def mymetrics(ypredicted, yexpected):
+    print(metrics.classification_report(ypredicted, yexpected))
+    k = metrics.cohen_kappa_score(ypredicted, yexpected); k = np.round(k,3);
+    auc = metrics.roc_auc_score(ypredicted, yexpected);   auc  = np.round(auc,3);
+    accuracy = metrics.accuracy_score(ypredicted, yexpected); accuracy = np.round(accuracy,3);
+
+    print("Kappa = " + str(k))
+    print("AUC = " + str(auc))
+    print("Accuracy = " + str(accuracy))
+
+# make at least one observation positive
+>>> y_crazy = np.zeros_like(y)
+>>> y_crazy[np.argwhere(y>0)[0]] = 1
+>>> mymetrics(y_crazy, y)
+
+precision    recall  f1-score   support
+
+         0       1.00      0.74      0.85       167
+         1       0.02      1.00      0.04         1
+
+avg / total       0.99      0.74      0.84       168
+
+Kappa = 0.032
+AUC = 0.868
+Accuracy = 0.738
+```
+
+The following code snippet shows the `Logistic_Regression` function inside `ispy1.predictive_statistics`.
+
+```Python
+def Logistic_Regression(Xdata, Ydata, oversample = False, K_neighbors = 4):
+    '''
+    Perform Logistic Regression optimizing C, penalty, and fit_intercept to maximize
+    Cohen kappa (min  = -1, max = 1.0)
+    '''
+
+    # split data
+    X_train, X_test, y_train, y_test = split_data(Xdata,Ydata, oversample, K_neighbors)
+
+    # train and tune parameters using GridSearchCV
+    pars= dict(   C = np.arange(.01,100,.1),
+                  penalty = ['l2', 'l1'],
+                  fit_intercept = [True,False])
+
+    grid =  GridSearchCV(  linear_model.LogisticRegression(), param_grid = pars,
+                           scoring = metrics.make_scorer(metrics.cohen_kappa_score),
+                           cv= 5, verbose = 0, n_jobs = -1)
+
+    # fit
+    grid.fit(X_train,y_train)
+
+    # metrics
+    auc, kappa, fpr, tpr = binary_classifier_metrics(grid, X_train, y_train, X_test, y_test)
+
+    # output
+    return auc, kappa, fpr, tpr
+```
+Running `Logistic Regression` without oversampling yields the following results for `PCR`:
+
+```Python
+>>> auc1, kappa1, fpr1, tpr1 = predictive_statistics.Logistic_Regression(X, y, oversample = False)
+precision    recall  f1-score   support
+
+  0       0.77      0.87      0.82        39
+  1       0.29      0.17      0.21        12
+
+avg / total       0.66      0.71      0.68        51
+
+The estimated Cohen kappa is 0.0449438202247
+The estimated AUC is 0.519
+============================================================
+```
+Because `AUC` is close to 0.50 and `kappa` is close to 0.0, we can say that these results indicate that the observed performance of  logistic regression is very close to what we would expect by just flipping a coin (50% chance).
+On the other hand, running logistic regression with oversampling yields a better result:
+
+```Python
+>>> auc2, kappa2, fpr2, tpr2 = predictive_statistics.Logistic_Regression(X, y, oversample = True, K_neighbors = 4)
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.82      0.72      0.77        39
+          1       0.35      0.50      0.41        12
+
+avg / total       0.71      0.67      0.68        51
+
+The estimated Cohen kappa is 0.190476190476
+The estimated AUC is 0.609
+============================================================
+```
+The details for the implementation of oversampling by ADASYN can be found in the `split_data` function of `ispy1.predictive_statistics`. Next, we can compare the ROC curves for the oversampled and and standard logistic regression of `PCR`:
+
+```Python
+title ='Effect of oversampling on Logistic Regression for PCR'
+predictive_statistics.plot_compare_roc(fpr1, tpr1,fpr2, tpr2, auc1, auc2, title = title)
+```
+![pcr_logistic_compare](./images/PCR_Logistic.png)
+
+A random forest classifier was also implemented with and without oversampling. Please see `predictive_statistics.RandomForest_Classifier` for further details.
+```Python
+>>> auc1, kappa1, fpr1, tpr1, forest = predictive_statistics.RandomForest_Classifier(X, y)
+precision    recall  f1-score   support
+
+         0       0.80      0.92      0.86        39
+         1       0.50      0.25      0.33        12
+
+avg / total       0.73      0.76      0.73        51
+
+The estimated Cohen kappa is 0.209302325581
+The estimated AUC is 0.587
+============================================================
+
+>>> auc2, kappa2, fpr2, tpr2, Forest = predictive_statistics.RandomForest_Classifier(X, y, oversample=True, K_neighbors = 2)
+
+Data was oversampled using the ADASYN method
+             precision    recall  f1-score   support
+
+          0       0.81      0.90      0.85        39
+          1       0.50      0.33      0.40        12
+
+avg / total       0.74      0.76      0.75        51
+
+The estimated Cohen kappa is 0.260869565217
+The estimated AUC is 0.615
+============================================================
+```
+These results indicate that oversampling has a very small benefit for random forest classifiers.
+
+
+**Survival (`Alive`)**   
+Unbalanced sampl
 
 
 
-be classified in categorical outcomes main
+
+
+
+Furthe
